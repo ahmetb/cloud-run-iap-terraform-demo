@@ -23,7 +23,7 @@ gcloud services enable \
     vpcaccess.googleapis.com
 ```
 
-Create OAuth2 web application (and note its cliend_id and client_secret)
+Create OAuth2 web application (and note its client_id and client_secret)
 from https://console.cloud.google.com/apis/credentials.
 
 Deploy using Terraform:
