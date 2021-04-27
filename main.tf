@@ -157,5 +157,5 @@ output "load-balancer-ip" {
 }
 
 output "oauth2-redirect-uri" {
-  value = "https://iap.googleapis.com/v1/oauth/clientIds/${var.iap_client_id}:handleRedirect"
+  value = nonsensitive("https://iap.googleapis.com/v1/oauth/clientIds/${var.iap_client_id}:handleRedirect")
 }
