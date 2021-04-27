@@ -35,11 +35,13 @@ variable "lb_name" {
 }
 
 variable "iap_client_id" {
-  type = string
+  type      = string
+  sensitive = false
 }
 
 variable "iap_client_secret" {
-  type = string
+  type      = string
+  sensitive = true
 }
 
 provider "google" {
@@ -87,7 +89,7 @@ data "google_iam_policy" "iap" {
     role = "roles/iap.httpsResourceAccessor"
     members = [
       "user:ahmetalpbalkan@gmail.com", // a particular user
-      "group:everyone@google.com", // a google group
+      "group:everyone@google.com",     // a google group
       // "allAuthenticatedUsers" // anyone with a Google account (not recommended)
     ]
   }
@@ -103,8 +105,8 @@ resource "google_iap_web_backend_service_iam_policy" "policy" {
 }
 
 resource "google_compute_region_network_endpoint_group" "serverless_neg" {
-  provider = google
-  name     = "serverless-neg"
+  provider              = google
+  name                  = "serverless-neg"
   network_endpoint_type = "SERVERLESS"
   region                = var.region
   cloud_run {
@@ -145,9 +147,9 @@ resource "google_cloud_run_service_iam_member" "public-access" {
 }
 
 resource "google_vpc_access_connector" "connector" {
-  name    = "example-vpc-connector"
-  region  = var.region
-  project = var.project_id
+  name          = "example-vpc-connector"
+  region        = var.region
+  project       = var.project_id
   ip_cidr_range = "10.8.0.0/28"
   network       = "default"
 }
@@ -157,5 +159,5 @@ output "load-balancer-ip" {
 }
 
 output "oauth2-redirect-uri" {
-  value = nonsensitive("https://iap.googleapis.com/v1/oauth/clientIds/${var.iap_client_id}:handleRedirect")
+  value = "https://iap.googleapis.com/v1/oauth/clientIds/${var.iap_client_id}:handleRedirect"
 }
