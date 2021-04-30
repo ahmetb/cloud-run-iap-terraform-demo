@@ -48,6 +48,48 @@ provider "google" {
   project = var.project_id
 }
 
+resource "google_vpc_access_connector" "connector" {
+  name          = "example-vpc-connector"
+  region        = var.region
+  project       = var.project_id
+  ip_cidr_range = "10.8.0.0/28"
+  network       = "default"
+}
+
+resource "google_cloud_run_service" "default" {
+  name     = "example"
+  location = var.region
+  project  = var.project_id
+
+  metadata {
+    annotations = {
+      "run.googleapis.com/ingress" : "internal-and-cloud-load-balancing"
+    }
+  }
+  template {
+    metadata {
+      annotations = {
+        "run.googleapis.com/vpc-access-connector" : google_vpc_access_connector.connector.name
+      }
+    }
+    spec {
+      containers {
+        image = "gcr.io/cloudrun/hello"
+      }
+    }
+  }
+}
+
+resource "google_compute_region_network_endpoint_group" "serverless_neg" {
+  provider              = google
+  name                  = "serverless-neg"
+  network_endpoint_type = "SERVERLESS"
+  region                = var.region
+  cloud_run {
+    service = google_cloud_run_service.default.name
+  }
+}
+
 module "lb-http" {
   source  = "GoogleCloudPlatform/lb-http/google//modules/serverless_negs"
   version = "5.0.0"
@@ -88,9 +130,9 @@ data "google_iam_policy" "iap" {
   binding {
     role = "roles/iap.httpsResourceAccessor"
     members = [
-      "user:ahmetalpbalkan@gmail.com", // a particular user
-      "group:everyone@google.com",     // a google group
-      // "allAuthenticatedUsers" // anyone with a Google account (not recommended)
+      "group:everyone@google.com",        // a google group
+      // "allAuthenticatedUsers"          // anyone with a Google account (not recommended)
+      // "user:ahmetalpbalkan@gmail.com", // a particular user
     ]
   }
 }
@@ -102,56 +144,6 @@ resource "google_iap_web_backend_service_iam_policy" "policy" {
   depends_on = [
     module.lb-http
   ]
-}
-
-resource "google_compute_region_network_endpoint_group" "serverless_neg" {
-  provider              = google
-  name                  = "serverless-neg"
-  network_endpoint_type = "SERVERLESS"
-  region                = var.region
-  cloud_run {
-    service = google_cloud_run_service.default.name
-  }
-}
-
-resource "google_cloud_run_service" "default" {
-  name     = "example"
-  location = var.region
-  project  = var.project_id
-
-  metadata {
-    annotations = {
-      "run.googleapis.com/ingress" : "internal-and-cloud-load-balancing"
-    }
-  }
-  template {
-    metadata {
-      annotations = {
-        "run.googleapis.com/vpc-access-connector" : google_vpc_access_connector.connector.name
-      }
-    }
-    spec {
-      containers {
-        image = "gcr.io/cloudrun/hello"
-      }
-    }
-  }
-}
-
-resource "google_cloud_run_service_iam_member" "public-access" {
-  location = google_cloud_run_service.default.location
-  project  = google_cloud_run_service.default.project
-  service  = google_cloud_run_service.default.name
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
-
-resource "google_vpc_access_connector" "connector" {
-  name          = "example-vpc-connector"
-  region        = var.region
-  project       = var.project_id
-  ip_cidr_range = "10.8.0.0/28"
-  network       = "default"
 }
 
 output "load-balancer-ip" {
