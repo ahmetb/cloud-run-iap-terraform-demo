@@ -92,7 +92,7 @@ resource "google_compute_region_network_endpoint_group" "serverless_neg" {
 
 module "lb-http" {
   source  = "GoogleCloudPlatform/lb-http/google//modules/serverless_negs"
-  version = "5.0.0"
+  version = "5.1.0"
 
   project = var.project_id
   name    = var.lb_name
@@ -130,7 +130,7 @@ data "google_iam_policy" "iap" {
   binding {
     role = "roles/iap.httpsResourceAccessor"
     members = [
-      "group:everyone@google.com",        // a google group
+      "group:everyone@google.com", // a google group
       // "allAuthenticatedUsers"          // anyone with a Google account (not recommended)
       // "user:ahmetalpbalkan@gmail.com", // a particular user
     ]
