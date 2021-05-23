@@ -142,6 +142,54 @@ the users/group specified in [`main.tf`](./main.tf) by visiting your domain.
 Run the previous `terraform apply` command as `terraform destroy` to clean up
 the created resources.
 
+## Infrastructure
+The following diagram shows the infrastructure created.
+![diagram](./diagrams/Infrastructure.png)
+
+### Serverless VPC Access Connector
+The [Serverless VPC Access][serverless vpc access] is the connection between your Cloud
+Run service and resources inside your VPC.
+
+### Cloud Run Service
+The [Cloud Run Service][cloud run] is a compute service which actually runs your website.
+In this example a simple hello world Docker container.
+
+### Serverless Network Endpoint Group
+The [Serverless Network Endpoint Group][serverless neg] is the connection between your Load Balancer and your
+Cloud Run service. It allows requests to the load balancer, to be routed to the serverless app backend.
+
+### HTTP/S Load Balancer
+The [HTTP/S Load Balancer][load balancer] listens to incoming traffic on an IP address and directs this to a backend
+service. A [terraform module][tf lb] is used which creates several resources, such as:
+- Global Address
+- HTTP Proxy 
+- Forwarding rules
+- Managed SSL certificate
+- Serverless NEG as backend
+
+In this case the load balancer doesn't act traditionally, where the load is balanced between a group of backend
+services, rather, all load is forwarded to the configured backend.
+
+### IAM Policy
+The [IAM Policy][iam policy] defines which members will be granted the role `iap.httpsResourceAccessor`. With it, you
+manage who will have access to your website and who doesn't.
+
+### IAM Policy for Identity-Aware Proxy WebBackendService
+The [IAM Policy for Identity-Aware Proxy WebBackendService][iap] configures the [Identity-Aware Proxy][iap], and binds the
+IAM Policy you defined to the Load Balancer. From here you can select the HTTPS resource, click on the info panel and
+add or remove members from the `IAP-secured Web App User` role.
+
+[serverless vpc access]: https://console.cloud.google.com/networking/connectors
+[cloud run]: https://console.cloud.google.com/run
+[serverless neg]: https://console.cloud.google.com/compute/networkendpointgroups/list
+[load balancer]: https://console.cloud.google.com/net-services/loadbalancing/loadBalancers/list
+[tf lb]: https://github.com/terraform-google-modules/terraform-google-lb-http
+[iam policy]: https://console.cloud.google.com/iam-admin/roles/details/roles%3Ciap.httpsResourceAccessor
+[iap]: https://console.cloud.google.com/security/iap
+
+## External resources
+- [Cloud OnAir video](https://www.youtube.com/watch?v=68LmhtvSNZY)
+
 ------
 
 This is not an official tutorial and can go out of date. Please read the
